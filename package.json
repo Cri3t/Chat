@@ -1,0 +1,17 @@
+{
+  "name": "health-chat",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --filter=@health-chat/web",
+    "lint": "turbo run lint",
+    "preview": "turbo run preview --filter=@health-chat/web",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "catalog:dev",
+    "eslint": "catalog:dev",
+    "turbo": "catalog:dev"
+  }
+}

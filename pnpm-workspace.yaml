@@ -1,0 +1,9 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+catalogs:
+  dev:
+    '@antfu/eslint-config': latest
+    eslint: latest
+    turbo: latest
