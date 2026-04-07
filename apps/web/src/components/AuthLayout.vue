@@ -1,6 +1,5 @@
 <script setup lang="ts">
-const robotUrl = new URL("@/assets/images/robot-fill.png", import.meta.url)
-  .href;
+import robotUrl from "@health-chat/assets/images/robot-fill.png";
 </script>
 
 <template>

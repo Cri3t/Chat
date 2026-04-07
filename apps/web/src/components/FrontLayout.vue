@@ -3,8 +3,8 @@ import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { logout as logoutApi } from "@/api/index";
 import { ElMessageBox, ElMessage } from "element-plus";
+import iconUrl from "@health-chat/assets/images/机器人.png";
 
-const iconUrl = new URL("@/assets/images/机器人.png", import.meta.url).href;
 const isLoggedIn = ref(false);
 const router = useRouter();
 

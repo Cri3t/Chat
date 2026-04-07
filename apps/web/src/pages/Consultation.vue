@@ -10,13 +10,11 @@ import {
 import type { Session, Message } from "@/types/consultation.types";
 import { ElMessage } from "element-plus";
 import { Delete } from "@element-plus/icons-vue";
+import robotUrl from "@health-chat/assets/images/robot-fill.png";
+import avatarUrl from "@health-chat/assets/images/like.png";
+import userUrl from "@health-chat/assets/images/users.png";
 
-const robotUrl = new URL("@/assets/images/robot-fill.png", import.meta.url)
-  .href;
-const avatarUrl = new URL("@/assets/images/like.png", import.meta.url).href;
-const userUrl = new URL("@/assets/images/users.png", import.meta.url).href;
 
-const aiMessages = ref([]); //AI消息列表
 const userMessages = ref<string>(""); //用户消息
 const isSending = ref(false); //是否正在发送
 const currentSession = ref<Session | null>(null); //新会话对象
@@ -112,6 +110,7 @@ const sendMessage = () => {
   if (currentSession.value?.status === "TEMP") {
     startSession(message);
   }
+  // todo:status的值为ACTIVE
 };
 
 //Enter发送逻辑
@@ -208,7 +207,7 @@ onMounted(() => {
       </div>
       <!-- 聊天消息区域 -->
       <div class="chat-messages">
-        <div class="message-item ai-message" v-if="aiMessages.length === 0">
+        <div class="message-item ai-message" v-if="chatMessages.length === 0">
           <div class="message-avatar">
             <el-image :src="robotUrl" style="width: 20px; height: 20px" />
           </div>
