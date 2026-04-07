@@ -7,3 +7,19 @@ catalogs:
     '@antfu/eslint-config': latest
     eslint: latest
     turbo: latest
+catalog:
+  '@element-plus/icons-vue': ^2.3.2
+  '@types/node': ^24.10.1
+  '@vitejs/plugin-vue': ^6.0.2
+  '@vue/tsconfig': ^0.8.1
+  axios: ^1.13.6
+  element-plus: ^2.13.3
+  less: ^4.5.1
+  pinia: ^3.0.4
+  typescript: ~5.9.3
+  unplugin-auto-import: ^21.0.0
+  unplugin-vue-components: ^31.0.0
+  vite: ^7.3.1
+  vue: ^3.5.25
+  vue-router: ^4.6.4
+  vue-tsc: ^3.1.5
