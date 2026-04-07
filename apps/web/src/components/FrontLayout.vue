@@ -1,8 +1,39 @@
 <script lang="ts" setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { logout as logoutApi } from "@/api/index";
+import { ElMessageBox, ElMessage } from "element-plus";
 
 const iconUrl = new URL("@/assets/images/机器人.png", import.meta.url).href;
 const isLoggedIn = ref(false);
+const router = useRouter();
+
+const handleLogout = () => {
+  ElMessageBox.confirm("确认退出登录？", "退出登录", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(async () => {
+      try {
+        await logoutApi();
+      } catch (error) {
+        console.error("退出登录失败:", error);
+      }
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("userInfo");
+      isLoggedIn.value = false;
+
+      ElMessage.success("已退出登录");
+      router.push("/auth/login");
+    })
+    .catch(() => {});
+};
+
+onMounted(() => {
+  isLoggedIn.value = localStorage.getItem("token") !== null;
+});
 </script>
 
 <template>
@@ -25,7 +56,9 @@ const isLoggedIn = ref(false);
         <router-link to="/knowledge" class="nav-link" v-if="isLoggedIn"
           >知识库</router-link
         >
-        <el-button class="logout-btn" v-if="isLoggedIn">退出登录</el-button>
+        <el-button class="logout-btn" v-if="isLoggedIn" @click="handleLogout()"
+          >退出登录</el-button
+        >
         <template v-else>
           <router-link to="/auth/login" class="nav-link">登录</router-link>
           <router-link to="/auth/register" class="nav-link">注册</router-link>
@@ -35,7 +68,7 @@ const isLoggedIn = ref(false);
     <div class="main-content"><router-view></router-view></div>
     <div class="footer-container">
       <div class="footer-text">
-        <p>© 2023 心理健康助手. All rights reserved.</p>
+        <p>© 2026 心理健康助手. All rights reserved.</p>
       </div>
     </div>
   </div>

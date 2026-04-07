@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { Back } from "@element-plus/icons-vue";
 import { ElMessage, type FormInstance } from "element-plus";
-import { register } from "@/api";
+import { register as registerApi } from "@/api";
 
 type FormData = {
   username: string;
@@ -16,7 +16,7 @@ type FormData = {
   userType: 1;
 };
 
-const formData = ref({
+const formData = ref<FormData>({
   username: "",
   email: "",
   nickname: "",
@@ -75,11 +75,11 @@ const handleRegister = async () => {
     if (valid) {
       console.log("表单验证通过", fields);
       try {
-        const res = await register(formData.value);
-        ElMessage.success("注册成功");
+        const res = await registerApi(formData.value);
         setTimeout(() => {
           router.push("/auth/login");
         }, 500);
+        ElMessage.success("注册成功");
         console.log("注册成功", res);
       } catch (error: any) {
         console.log("注册失败", error);

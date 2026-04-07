@@ -50,4 +50,22 @@ const router = createRouter({
   routes,
 });
 
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    const userInfo = JSON.parse(localStorage.getItem("userInfo") as string);
+
+    if (userInfo.userType === 1) {
+      if (to.path.startsWith("/auth")) next("/");
+      else next();
+    } else if (userInfo.userType === 2) {
+      if (to.path.startsWith("/auth")) next("/");
+      else next();
+    }
+  } else {
+    if (to.path.startsWith("/")) next();
+    else next("/auth/login");
+  }
+});
+
 export default router;

@@ -22,8 +22,9 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   (response) => {
     const { data, config } = response;
+
     if (Number(data.code) === 200) {
-      console.log("请求成功，返回数据:", data);
+      // console.log("请求成功，返回数据:", data);
       return data.data;
     } else if (data.code === "BUSINESS_ERROR" || data.success === false) {
       ElMessage.error(data.message || "操作失败");

@@ -1,9 +1,9 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { Back } from "@element-plus/icons-vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import type { FormInstance, FormRules } from "element-plus";
-import { login } from "@/api/index";
+import { login as loginApi } from "@/api/index";
 
 type FormData = {
   username: string;
@@ -48,22 +48,22 @@ const goHome = () => {
 
 const handleLogin = async () => {
   if (!formRef.value) return;
-  await formRef.value.validate((valid, fields) => {
+  await formRef.value.validate((valid) => {
     if (valid) {
-      console.log("登录表单数据:", formData.value);
-      login(formData.value)
+      // console.log("登录表单数据:", formData.value);
+      loginApi(formData.value)
         .then((data: any) => {
           console.log(data);
           if (data.token) {
-            console.log("即将存储的数据:", data);
+            // console.log("即将存储的数据:", data);
             localStorage.setItem("token", data.token);
             localStorage.setItem("userInfo", JSON.stringify(data.userInfo));
+            router.replace("/");
           }
         })
         .catch((error) => {
           console.error("登录失败:", error);
         });
-      window.location.href = "/";
     }
   });
 };
