@@ -5,6 +5,8 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --filter=@health-chat/web",
+    "dev:server": "turbo run dev --filter=@health-chat/server",
+    "dev:all": "turbo run dev --filter=@health-chat/web --filter=@health-chat/server",
     "lint": "turbo run lint",
     "preview": "turbo run preview --filter=@health-chat/web",
     "typecheck": "turbo run typecheck"

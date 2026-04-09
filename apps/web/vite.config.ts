@@ -23,7 +23,10 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      "/api": { target: "http://159.75.169.224:1235", changeOrigin: true },
+      "/api": {
+        target: process.env.VITE_API_PROXY_TARGET ?? "http://localhost:3000",
+        changeOrigin: true,
+      },
     },
   },
 });
