@@ -11,8 +11,9 @@
     "typecheck": "vue-tsc -b"
   },
   "dependencies": {
-    "@health-chat/assets": "workspace:*",
     "@element-plus/icons-vue": "^2.3.2",
+    "@health-chat/assets": "workspace:*",
+    "@microsoft/fetch-event-source": "^2.0.1",
     "axios": "^1.13.6",
     "element-plus": "^2.13.3",
     "pinia": "^3.0.4",

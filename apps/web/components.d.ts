@@ -20,6 +20,7 @@ declare module 'vue' {
     ElImage: typeof import('element-plus/es')['ElImage']
     ElInput: typeof import('element-plus/es')['ElInput']
     FrontLayout: typeof import('./src/components/FrontLayout.vue')['default']
+    MarkdownRenderer: typeof import('./src/components/MarkdownRenderer.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }
