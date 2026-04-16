@@ -366,6 +366,7 @@ onMounted(() => {
                 v-else-if="message.senderType === 2 && !message.isError"
                 :content="message.content"
                 :isAiMessage="true"
+                :streaming="isSending && message === messages[messages.length - 1]"
               />
               <p
                 v-else-if="message.content"

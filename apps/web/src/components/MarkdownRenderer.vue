@@ -1,70 +1,98 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { onBeforeUnmount, ref, watch } from "vue";
+import type { UnstableTailMode } from "@/utils/markdown";
+import {
+  renderInlineMarkdown,
+  renderMarkdown,
+  renderUnstableTail,
+  splitMarkdownForStreaming,
+} from "@/utils/markdown";
 
 type Props = {
   content: string;
   isAiMessage?: boolean;
+  streaming?: boolean;
+  unstableTailMode?: UnstableTailMode;
 };
 
 const props = withDefaults(defineProps<Props>(), {
   isAiMessage: false,
+  streaming: false,
+  unstableTailMode: "inline",
 });
 
-// 简单的Markdown渲染器
-const renderedContent = computed(() => {
-  let html = props.content;
+const renderedContent = ref("");
+const pendingContent = ref(props.content);
 
-  // 转义HTML标签（防止XSS）
-  html = html.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+let frameId: number | null = null;
+let lastStableContent = "";
+let lastTailContent = "";
+let lastTailMode: UnstableTailMode = props.unstableTailMode;
 
-  // 处理代码块（```）
-  html = html.replace(
-    /```(\w+)?\n([\s\S]*?)\n```/g,
-    (_match: string, lang: string | undefined, code: string) => {
-      return `<pre class="code-block"><code class="language-${lang || "text"}">${code.trim()}</code></pre>`;
-    },
-  );
+const flushRender = () => {
+  const source = pendingContent.value;
 
-  // 处理行内代码（`）
-  html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+  if (!props.streaming) {
+    if (source !== lastStableContent || lastTailContent) {
+      renderedContent.value = renderMarkdown(source);
+      lastStableContent = source;
+      lastTailContent = "";
+      lastTailMode = props.unstableTailMode;
+    }
+    return;
+  }
 
-  // 处理粗体（**）
-  html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  const { stableContent, unstableTail, hasUnclosedFence } = splitMarkdownForStreaming(source);
+  let stableHtml = renderedContent.value;
 
-  // 处理斜体（*）
-  html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
+  if (stableContent !== lastStableContent) {
+    stableHtml = renderMarkdown(stableContent);
+    lastStableContent = stableContent;
+  }
 
-  // 处理标题
-  html = html.replace(/^### (.*$)/gm, "<h3>$1</h3>");
-  html = html.replace(/^## (.*$)/gm, "<h2>$1</h2>");
-  html = html.replace(/^# (.*$)/gm, "<h1>$1</h1>");
+  if (hasUnclosedFence) {
+    if (unstableTail !== lastTailContent || props.unstableTailMode !== lastTailMode) {
+      lastTailContent = unstableTail;
+      lastTailMode = props.unstableTailMode;
+    }
 
-  // 处理链接
-  html = html.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
-  );
+    renderedContent.value = `${stableHtml}${renderUnstableTail(lastTailContent, lastTailMode)}`;
+    return;
+  }
 
-  // 处理无序列表
-  html = html.replace(/^- (.*)$/gm, "<li>$1</li>");
-  html = html.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
+  if (unstableTail !== lastTailContent || props.unstableTailMode !== lastTailMode) {
+    lastTailContent = unstableTail;
+    lastTailMode = props.unstableTailMode;
+  }
 
-  // 处理有序列表
-  html = html.replace(/^\d+\. (.*)$/gm, "<li>$1</li>");
+  renderedContent.value = `${stableHtml}${renderInlineMarkdown(lastTailContent)}`;
+};
 
-  // 处理引用
-  html = html.replace(/^> (.*)$/gm, "<blockquote>$1</blockquote>");
+const scheduleRender = (content: string) => {
+  pendingContent.value = content;
 
-  // 处理分割线
-  html = html.replace(/^---$/gm, "<hr>");
+  if (frameId !== null) {
+    return;
+  }
 
-  // 处理换行
-  html = html.replace(/\n/g, "<br>");
+  frameId = window.requestAnimationFrame(() => {
+    frameId = null;
+    flushRender();
+  });
+};
 
-  // 清理多余的br标签
-  html = html.replace(/<br><br>/g, "<br>");
+watch(
+  () => [props.content, props.streaming, props.unstableTailMode] as const,
+  ([content]) => {
+    scheduleRender(content);
+  },
+  { immediate: true },
+);
 
-  return html;
+onBeforeUnmount(() => {
+  if (frameId !== null) {
+    window.cancelAnimationFrame(frameId);
+  }
 });
 </script>
 
@@ -78,47 +106,48 @@ const renderedContent = computed(() => {
 .markdown-content {
   line-height: 1.6;
   color: inherit;
+  word-break: break-word;
 }
 
-.markdown-content h1,
-.markdown-content h2,
-.markdown-content h3 {
+.markdown-content :deep(h1),
+.markdown-content :deep(h2),
+.markdown-content :deep(h3) {
   margin: 1em 0 0.5em 0;
   font-weight: 600;
   line-height: 1.3;
 }
 
-.markdown-content h1 {
+.markdown-content :deep(h1) {
   font-size: 1.5em;
   border-bottom: 2px solid #e5e7eb;
   padding-bottom: 0.3em;
 }
 
-.markdown-content h2 {
+.markdown-content :deep(h2) {
   font-size: 1.3em;
   color: #374151;
 }
 
-.markdown-content h3 {
+.markdown-content :deep(h3) {
   font-size: 1.1em;
   color: #4b5563;
 }
 
-.markdown-content p {
+.markdown-content :deep(p) {
   margin: 0.5em 0;
 }
 
-.markdown-content ul,
-.markdown-content ol {
+.markdown-content :deep(ul),
+.markdown-content :deep(ol) {
   margin: 0.5em 0;
   padding-left: 1.5em;
 }
 
-.markdown-content li {
+.markdown-content :deep(li) {
   margin: 0.3em 0;
 }
 
-.markdown-content blockquote {
+.markdown-content :deep(blockquote) {
   border-left: 4px solid #d1d5db;
   padding-left: 1em;
   margin: 1em 0;
@@ -129,18 +158,18 @@ const renderedContent = computed(() => {
   padding: 0.5em 1em;
 }
 
-.ai-markdown blockquote {
+.ai-markdown :deep(blockquote) {
   border-left-color: #3b82f6;
   background: #eff6ff;
 }
 
-.markdown-content hr {
+.markdown-content :deep(hr) {
   border: none;
   border-top: 2px solid #e5e7eb;
   margin: 1.5em 0;
 }
 
-.markdown-content code.inline-code {
+.markdown-content :deep(code:not(pre code)) {
   background: #f3f4f6;
   padding: 0.2em 0.4em;
   border-radius: 0.25em;
@@ -149,12 +178,12 @@ const renderedContent = computed(() => {
   color: #e11d48;
 }
 
-.ai-markdown code.inline-code {
+.ai-markdown :deep(code:not(pre code)) {
   background: #dbeafe;
   color: #1e40af;
 }
 
-.markdown-content pre.code-block {
+.markdown-content :deep(pre.code-block) {
   background: #1f2937;
   color: #f9fafb;
   padding: 1em;
@@ -166,41 +195,45 @@ const renderedContent = computed(() => {
   line-height: 1.4;
 }
 
-.markdown-content pre.code-block code {
+.markdown-content :deep(pre.code-block code) {
   background: none;
   padding: 0;
   color: inherit;
 }
 
-.markdown-content a {
+.markdown-content :deep(pre.code-block.code-block--unstable) {
+  opacity: 0.92;
+}
+
+.markdown-content :deep(a) {
   color: #3b82f6;
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color 0.2s ease;
 }
 
-.markdown-content a:hover {
+.markdown-content :deep(a:hover) {
   border-bottom-color: #3b82f6;
 }
 
-.ai-markdown a {
+.ai-markdown :deep(a) {
   color: #1e40af;
 }
 
-.ai-markdown a:hover {
+.ai-markdown :deep(a:hover) {
   border-bottom-color: #1e40af;
 }
 
-.markdown-content strong {
+.markdown-content :deep(strong) {
   font-weight: 600;
   color: #374151;
 }
 
-.ai-markdown strong {
+.ai-markdown :deep(strong) {
   color: #1e40af;
 }
 
-.markdown-content em {
+.markdown-content :deep(em) {
   font-style: italic;
   color: #6b7280;
 }
