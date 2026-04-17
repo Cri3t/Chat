@@ -2,48 +2,15 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { Back } from "@element-plus/icons-vue";
-import { ElMessage, type FormInstance } from "element-plus";
+import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import { register as registerApi } from "@/api";
+import type {
+  RegisterFormData,
+  RegisterFormFieldKey,
+  RegisterFormItem,
+} from "@/types/register.types";
 
-type FormData = {
-  username: string;
-  email: string;
-  nickname: string;
-  phone: string;
-  password: string;
-  confirmPassword: string;
-  gender: 0;
-  userType: 1;
-};
-
-const formData = ref<FormData>({
-  username: "",
-  email: "",
-  nickname: "",
-  phone: "",
-  password: "",
-  confirmPassword: "",
-  gender: 0,
-  userType: 1,
-});
-
-const rules = ref({
-  username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
-  email: [{ required: true, message: "请输入邮箱", trigger: "blur" }],
-  nickname: [{ required: true, message: "请输入昵称", trigger: "blur" }],
-  phone: [{ required: true, message: "请输入手机号", trigger: "blur" }],
-  password: [{ required: true, message: "请输入密码", trigger: "blur" }],
-  confirmPassword: [{ required: true, message: "请确认密码", trigger: "blur" }],
-});
-
-type FormItem = {
-  label: string;
-  prop: keyof FormData;
-  placeholder: string;
-  type?: string;
-};
-
-const formItems: FormItem[] = [
+const formItems = [
   { label: "用户名", prop: "username", placeholder: "请输入用户名" },
   { label: "邮箱", prop: "email", placeholder: "请输入邮箱" },
   { label: "昵称", prop: "nickname", placeholder: "请输入昵称" },
@@ -60,7 +27,29 @@ const formItems: FormItem[] = [
     placeholder: "请确认密码",
     type: "password",
   },
-];
+] satisfies RegisterFormItem[];
+
+const createFieldDefaults = () =>
+  Object.fromEntries(formItems.map(({ prop }) => [prop, ""])) as Record<
+    RegisterFormFieldKey,
+    string
+  >;
+
+const createFormRules = () =>
+  Object.fromEntries(
+    formItems.map(({ prop, placeholder }) => [
+      prop,
+      [{ required: true, message: placeholder, trigger: "blur" }],
+    ]),
+  ) as FormRules<RegisterFormData>;
+
+const formData = ref<RegisterFormData>({
+  ...createFieldDefaults(),
+  gender: 0,
+  userType: 1,
+});
+
+const rules = createFormRules();
 
 const router = useRouter();
 const goHome = () => {
@@ -120,7 +109,7 @@ const handleRegister = async () => {
           :prop="item.prop"
         >
           <el-input
-            v-model="formData[item.prop as keyof FormData]"
+            v-model="formData[item.prop]"
             :placeholder="item.placeholder"
             :type="item.type"
             :show-password="item.type === 'password'"
@@ -140,64 +129,4 @@ const handleRegister = async () => {
   </div>
 </template>
 
-<style scoped lang="less">
-.container {
-  width: 50%;
-  margin: auto;
-  .title {
-    .back-home {
-      margin-bottom: 20px;
-      margin-top: 10px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      transition: color 0.3s;
-      color: #666;
-
-      &:hover {
-        color: #333;
-      }
-
-      span {
-        font-size: 20px;
-        margin-left: 5px;
-      }
-    }
-    .title-text {
-      text-align: center;
-      h2 {
-        font-size: 24px;
-        margin-bottom: 10px;
-      }
-      p {
-        font-size: 18px;
-        color: #6b7280;
-      }
-    }
-  }
-  .form-container {
-    margin-top: 30px;
-    .btn {
-      text-align: center;
-      margin-top: 20px;
-      width: 100%;
-    }
-  }
-  .footer {
-    margin-top: 20px;
-    margin-bottom: 10px;
-    text-align: center;
-    p {
-      font-size: 14px;
-      color: #666;
-      a {
-        color: #4a90e2;
-        text-decoration: none;
-        &:hover {
-          text-decoration: underline;
-        }
-      }
-    }
-  }
-}
-</style>
+<style lang="less" scoped src="@/styles/pages/register.less"></style>

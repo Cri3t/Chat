@@ -4,31 +4,16 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import type { FormInstance, FormRules } from "element-plus";
 import { login as loginApi } from "@/api/index";
-
-type FormData = {
-  username: string;
-  password: string;
-};
+import type {
+  LoginFormData,
+  LoginFormFieldKey,
+  LoginFormItem,
+} from "@/types/login.types";
 
 const router = useRouter();
 const formRef = ref<FormInstance>();
-const formData = ref<FormData>({
-  username: "",
-  password: "",
-});
-const formRules = ref<FormRules>({
-  username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
-  password: [{ required: true, message: "请输入密码", trigger: "blur" }],
-});
 
-type FormItem = {
-  label: string;
-  prop: keyof FormData;
-  placeholder: string;
-  type?: string;
-};
-
-const formItems: FormItem[] = [
+const formItems = [
   {
     label: "用户名",
     prop: "username",
@@ -40,7 +25,27 @@ const formItems: FormItem[] = [
     placeholder: "请输入密码",
     type: "password",
   },
-];
+] satisfies LoginFormItem[];
+
+const createFieldDefaults = () =>
+  Object.fromEntries(formItems.map(({ prop }) => [prop, ""])) as Record<
+    LoginFormFieldKey,
+    string
+  >;
+
+const createFormRules = () =>
+  Object.fromEntries(
+    formItems.map(({ prop, placeholder }) => [
+      prop,
+      [{ required: true, message: placeholder, trigger: "blur" }],
+    ]),
+  ) as FormRules<LoginFormData>;
+
+const formData = ref<LoginFormData>({
+  ...createFieldDefaults(),
+});
+
+const formRules = createFormRules();
 
 const goHome = () => {
   router.push("/");
@@ -97,7 +102,7 @@ const handleLogin = async () => {
           :prop="item.prop"
         >
           <el-input
-            v-model="formData[item.prop as keyof FormData]"
+            v-model="formData[item.prop]"
             :placeholder="item.placeholder"
             :type="item.type"
             :show-password="item.type === 'password'"
@@ -117,64 +122,4 @@ const handleLogin = async () => {
   </div>
 </template>
 
-<style scoped lang="less">
-.container {
-  width: 60%;
-  margin: auto;
-  .title {
-    .back-home {
-      margin-bottom: 60px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      transition: color 0.3s;
-      color: #666;
-
-      &:hover {
-        color: #333;
-      }
-
-      span {
-        font-size: 20px;
-        margin-left: 5px;
-      }
-    }
-    .title-text {
-      text-align: center;
-      h2 {
-        margin-bottom: 10px;
-        font-size: 24px;
-        font-weight: bold;
-        color: #333;
-      }
-      p {
-        margin-bottom: 20px;
-        font-size: 16px;
-        color: #666;
-      }
-    }
-  }
-  .form-container {
-    .login-btn-container {
-      margin-top: 20px;
-      width: 100%;
-      text-align: center;
-    }
-  }
-  .footer {
-    margin-top: 30px;
-    text-align: center;
-    p {
-      font-size: 14px;
-      color: #666;
-      a {
-        color: #4a90e2;
-        text-decoration: none;
-        &:hover {
-          text-decoration: underline;
-        }
-      }
-    }
-  }
-}
-</style>
+<style lang="less" scoped src="@/styles/pages/login.less"></style>
