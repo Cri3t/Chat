@@ -6,8 +6,13 @@
   padding: 20px;
   .sidebar {
     width: 320px;
+    height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow: hidden;
     .ai-assistant-info {
-      margin-bottom: 20px;
+      flex-shrink: 0;
       background: linear-gradient(
         135deg,
         rgba(255, 255, 255, 0.9) 0%,
@@ -67,8 +72,9 @@
       border-radius: 16px;
       padding: 16px;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
-      min-height: 250px;
+      box-sizing: border-box;
+      flex: 0 0 250px;
+      min-height: 0;
       display: flex;
       flex-direction: column;
       .section-title {
@@ -81,8 +87,9 @@
         justify-content: space-between;
       }
       .session-list {
+        flex: 1;
+        min-height: 0;
         overflow-y: auto;
-        max-height: 200px;
         scrollbar-width: thin;
         scrollbar-color: rgba(64, 150, 255, 0.3) transparent;
         .session-item {
@@ -169,12 +176,16 @@
       );
       border-radius: 20px;
       padding: 16px;
-      margin-bottom: 20px;
       box-shadow: 0 8px 32px rgba(252, 244, 230, 0.8);
       border: 1px solid rgba(255, 255, 255, 0.2);
       position: relative;
-      overflow: hidden;
-      min-height: 300px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      box-sizing: border-box;
+      flex: 1 1 auto;
+      min-height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(251, 146, 60, 0.3) transparent;
 
       .garden-header {
         display: flex;
@@ -396,6 +407,7 @@
     flex-direction: column;
     overflow: hidden;
     flex: 1;
+    height: calc(100vh - 120px);
     .chat-header {
       background: linear-gradient(135deg, #fb923c 0%, #f59e0b 100%);
       color: white;
