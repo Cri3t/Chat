@@ -323,11 +323,12 @@ onMounted(() => {
         <div class="garden-header">
           <div class="garden-title">情绪花园</div>
         </div>
-        <div class="emotion-info">
+        <div class="garden-main">
+          <div class="emotion-info">
           <div class="emotion-name">中性</div>
           <div class="emotion-score">50</div>
         </div>
-        <div class="warm-tips">
+          <div class="warm-tips">
           <div class="emotion-status-text">
             <span class="status-label">今天感觉</span>
             <span class="status-emotion">{{
@@ -381,6 +382,7 @@ onMounted(() => {
                 {{ currentEmotion.riskDescription }}
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
