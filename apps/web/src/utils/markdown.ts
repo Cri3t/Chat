@@ -64,6 +64,25 @@ const markdownIt = new MarkdownIt({
   },
 });
 
+function unwrapMarkdownFence(content: string): string {
+  const normalized = content.replace(/\r\n/g, "\n");
+  const openingFence = normalized.match(/^\s*(`{3,}|~{3,})\s*(markdown|md)\s*\n/i);
+
+  if (!openingFence) {
+    return normalized;
+  }
+
+  const fenceMarker = openingFence[1] ?? "";
+  const fenceCharacter = fenceMarker.charAt(0);
+  const fenceLength = fenceMarker.length;
+  const body = normalized.slice(openingFence[0].length);
+  const closingFencePattern = new RegExp(
+    `\\n[ \\t]*[${fenceCharacter}]{${fenceLength},}[ \\t]*$`,
+  );
+
+  return body.replace(closingFencePattern, "");
+}
+
 const defaultLinkOpen =
   markdownIt.renderer.rules.link_open ??
   ((tokens, idx, options, _env, self) =>
@@ -79,7 +98,7 @@ markdownIt.renderer.rules.link_open = (tokens, idx, options, env, self) => {
 };
 
 export function splitMarkdownForStreaming(content: string): MarkdownSegments {
-  const normalized = content.replace(/\r\n/g, "\n");
+  const normalized = unwrapMarkdownFence(content);
   const lines = normalized.split("\n");
 
   let insideFence = false;
@@ -127,19 +146,23 @@ export function splitMarkdownForStreaming(content: string): MarkdownSegments {
 }
 
 export function renderMarkdown(content: string): string {
-  if (!content.trim()) {
+  const normalized = unwrapMarkdownFence(content);
+
+  if (!normalized.trim()) {
     return "";
   }
 
-  return markdownIt.render(content);
+  return markdownIt.render(normalized);
 }
 
 export function renderInlineMarkdown(content: string): string {
-  if (!content.trim()) {
+  const normalized = unwrapMarkdownFence(content);
+
+  if (!normalized.trim()) {
     return "";
   }
 
-  return `<p>${markdownIt.renderInline(content)}</p>`;
+  return `<p>${markdownIt.renderInline(normalized)}</p>`;
 }
 
 export function renderUnstableTail(
