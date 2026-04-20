@@ -7,6 +7,7 @@ import {
   getSessionList as getSessionListApi,
   deleteSessionMessage as deleteSessionMessageApi,
   getSessionMessage as getSessionMessageApi,
+  getSessionEmotion as getSessionEmotionApi,
 } from "@/api/index";
 import type { Session, Message } from "@/types/consultation.types";
 import MarkdownRenderer from "@/components/MarkdownRenderer.vue";
@@ -21,6 +22,15 @@ const isSending = ref(false); //是否正在发送
 const currentSession = ref<Session | null>(null); //新会话对象
 const sessionList = ref<any>([]); //会话列表
 const messages = ref<any>([]); //对话消息
+const currentEmotion = ref<any>({
+  primaryEmotion: "中性",
+  emotionScore: 50,
+  isNegative: false,
+  riskLevel: 0,
+  suggestion: "情绪稳定，继续保持哦！",
+  improvementSuggestions: [] as string[],
+  riskDescription: "",
+}); //当前情绪状态
 
 // 创建新临时会话，用于临时存储用户的会话
 const createNewSession = () => {
@@ -55,6 +65,7 @@ const handleEnterSession = async (session: any) => {
   }
   try {
     const messageDetail: any = await getSessionMessageApi({ sessionId });
+    await getSessionEmotion(sessionId);
     // messages.value = messageDetail?.data ?? [];
     messages.value = messageDetail;
     //更新当前会话状态
@@ -201,6 +212,7 @@ const handleAIResponse = (sessionId: string, userMessage: string) => {
         isSending.value = false;
         crtl.abort(); // 取消请求
         getSessionList();
+        getSessionEmotion(currentSession.value?.sessionId || "");
         return;
       }
 
@@ -218,7 +230,9 @@ const handleAIResponse = (sessionId: string, userMessage: string) => {
       throw error;
     },
 
-    onclose: () => {},
+    onclose: () => {
+      getSessionEmotion(currentSession.value?.sessionId || "");
+    },
   });
 };
 
@@ -230,6 +244,57 @@ const handleErrorAIResponse = (errorMessage: string) => {
   }
   isSending.value = false;
   ElMessage.error(errorMessage);
+};
+
+//处理情绪强度
+const getIntensityClass = (dot: number) => {
+  const score = currentEmotion.value.emotionScore;
+  if (score >= 66) {
+    return dot <= 3; // 高强度显示3个点
+  } else if (score >= 33) {
+    return dot <= 2; // 中强度显示2个点
+  } else {
+    return dot <= 1; // 低强度显示1个点
+  }
+};
+
+//处理风险强度
+const getRiskLevel = (level: number) => {
+  switch (level) {
+    case 0:
+      return "正常";
+    case 1:
+      return "关注";
+    case 2:
+      return "预警";
+    case 3:
+      return "危机";
+    default:
+      return "未知风险";
+  }
+};
+
+const getSessionEmotion = async (sessionId: string) => {
+  try {
+    const formattedId = sessionId.toString().startsWith("session_")
+      ? sessionId
+      : `session_${sessionId}`;
+    const res: any = await getSessionEmotionApi({
+      sessionId: formattedId,
+    });
+    console.log("情绪分析结果：", res);
+    currentEmotion.value = {
+      primaryEmotion: res.primaryEmotion,
+      emotionScore: res.emotionScore,
+      isNegative: res.isNegative,
+      riskLevel: res.riskLevel,
+      suggestion: res.suggestion,
+      improvementSuggestions: res.improvementSuggestions,
+      riskDescription: res.riskDescription,
+    };
+  } catch (error: any) {
+    ElMessage.error(error.message || "获取情绪分析失败");
+  }
 };
 
 onMounted(() => {
@@ -251,6 +316,72 @@ onMounted(() => {
         <div class="online-status">
           <div class="status-dot"></div>
           在线
+        </div>
+      </div>
+      <!-- 情绪花园 -->
+      <div class="emotion-garden">
+        <div class="garden-header">
+          <div class="garden-title">情绪花园</div>
+        </div>
+        <div class="emotion-info">
+          <div class="emotion-name">中性</div>
+          <div class="emotion-score">50</div>
+        </div>
+        <div class="warm-tips">
+          <div class="emotion-status-text">
+            <span class="status-label">今天感觉</span>
+            <span class="status-emotion">{{
+              currentEmotion.isNegative ? "需要关注" : "很不错"
+            }}</span>
+          </div>
+          <div class="emotion-intensity">
+            <span class="intensity-dots">
+              <span
+                v-for="dot in 3"
+                :key="dot"
+                class="dot"
+                :class="{ active: getIntensityClass(dot) }"
+              ></span
+            ></span>
+            <span class="intensity-level">{{
+              getRiskLevel(currentEmotion.riskLevel)
+            }}</span>
+          </div>
+          <div class="warm-suggestion" v-if="currentEmotion.suggestion">
+            <div class="suggestion-icon">💡</div>
+            <div class="suggestion-content">
+              <div class="suggestion-title">温暖建议</div>
+              <div class="suggestion-text">{{ currentEmotion.suggestion }}</div>
+            </div>
+          </div>
+
+          <!-- 治愈小行动 -->
+          <div class="healing-actions">
+            <div class="actions-title">治愈小行动</div>
+            <div class="actions-list">
+              <div
+                class="action-item"
+                v-for="action in currentEmotion.improvementSuggestions"
+                :key="action"
+              >
+                <div class="action-icon">✨</div>
+                <div class="action-text">{{ action }}</div>
+              </div>
+            </div>
+          </div>
+          <!-- 风险提示 -->
+          <div
+            class="risk-notice"
+            v-if="currentEmotion.riskLevel > 1 && currentEmotion.isNegative"
+          >
+            <div class="notice-icon">🤗</div>
+            <div class="notice-content">
+              <div class="notice-title">温馨提示</div>
+              <div class="notice-text">
+                {{ currentEmotion.riskDescription }}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <!-- 会话列表 -->
@@ -366,7 +497,9 @@ onMounted(() => {
                 v-else-if="message.senderType === 2 && !message.isError"
                 :content="message.content"
                 :isAiMessage="true"
-                :streaming="isSending && message === messages[messages.length - 1]"
+                :streaming="
+                  isSending && message === messages[messages.length - 1]
+                "
               />
               <p
                 v-else-if="message.content"
@@ -402,14 +535,16 @@ onMounted(() => {
             <span>{{ userInput.length }}/500</span>
           </div>
         </div>
-        <el-button
-          type="primary"
-          class="send-btn"
-          @click="sendMessage"
-          :disabled="!userInput.trim() || isSending || userInput.length > 500"
-        >
-          <el-icon><Promotion /></el-icon>
-        </el-button>
+        <div class="send-btn">
+          <el-button
+            type="primary"
+            class="send-btn"
+            @click="sendMessage"
+            :disabled="!userInput.trim() || isSending || userInput.length > 500"
+          >
+            <el-icon><Promotion /></el-icon>
+          </el-button>
+        </div>
       </div>
     </div>
   </div>

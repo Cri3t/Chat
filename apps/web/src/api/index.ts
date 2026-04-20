@@ -49,3 +49,11 @@ export const getSessionMessage = (params: { sessionId: string }) => {
     },
   );
 };
+
+//获取会话情绪分析结果
+export const getSessionEmotion = (params: { sessionId: string }) => {
+  return service.get(
+    `/psychological-chat/session/${params.sessionId}/emotion`,
+    { params },
+  );
+};
