@@ -50,7 +50,7 @@ onMounted(() => {
       <div class="nav-section">
         <router-link to="/" class="nav-link">首页</router-link>
         <router-link to="/consultation" class="nav-link">AI咨询</router-link>
-        <router-link to="/emotion-diary" class="nav-link" v-if="isLoggedIn"
+        <router-link to="/emotion" class="nav-link" v-if="isLoggedIn"
           >情绪日志</router-link
         >
         <router-link to="/knowledge" class="nav-link" v-if="isLoggedIn"

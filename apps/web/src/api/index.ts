@@ -5,6 +5,7 @@ import type {
   NewSession,
 } from "@/types/consultation.types";
 import type { RegisterPayload, LoginPayload } from "@/types/login.types";
+import type { Diary } from "@/types/diary.types";
 
 // 用户登录
 export const login = (data: LoginPayload) => {
@@ -56,4 +57,9 @@ export const getSessionEmotion = (params: { sessionId: string }) => {
     `/psychological-chat/session/${params.sessionId}/emotion`,
     { params },
   );
+};
+
+//emotion diary
+export const submitDiary = (data: Diary) => {
+  return service.post("/emotion-diary", data);
 };
