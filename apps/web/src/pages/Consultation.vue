@@ -177,6 +177,7 @@ const handleAIResponse = (sessionId: string, userMessage: string) => {
   };
 
   messages.value.push(streamingAiMessage);
+  const streamingMessage = messages.value[messages.value.length - 1];
 
   let contentBuffer = "";
   let flushTimer: ReturnType<typeof window.setTimeout> | null = null;
@@ -194,7 +195,7 @@ const handleAIResponse = (sessionId: string, userMessage: string) => {
       return;
     }
 
-    streamingAiMessage.content += contentBuffer;
+    streamingMessage.content += contentBuffer;
     contentBuffer = "";
     clearFlushTimer();
   };
@@ -359,64 +360,66 @@ onMounted(() => {
         </div>
         <div class="garden-main">
           <div class="emotion-info">
-          <div class="emotion-name">中性</div>
-          <div class="emotion-score">50</div>
-        </div>
+            <div class="emotion-name">中性</div>
+            <div class="emotion-score">50</div>
+          </div>
           <div class="warm-tips">
-          <div class="emotion-status-text">
-            <span class="status-label">今天感觉</span>
-            <span class="status-emotion">{{
-              currentEmotion.isNegative ? "需要关注" : "很不错"
-            }}</span>
-          </div>
-          <div class="emotion-intensity">
-            <span class="intensity-dots">
-              <span
-                v-for="dot in 3"
-                :key="dot"
-                class="dot"
-                :class="{ active: getIntensityClass(dot) }"
-              ></span
-            ></span>
-            <span class="intensity-level">{{
-              getRiskLevel(currentEmotion.riskLevel)
-            }}</span>
-          </div>
-          <div class="warm-suggestion" v-if="currentEmotion.suggestion">
-            <div class="suggestion-icon">💡</div>
-            <div class="suggestion-content">
-              <div class="suggestion-title">温暖建议</div>
-              <div class="suggestion-text">{{ currentEmotion.suggestion }}</div>
+            <div class="emotion-status-text">
+              <span class="status-label">今天感觉</span>
+              <span class="status-emotion">{{
+                currentEmotion.isNegative ? "需要关注" : "很不错"
+              }}</span>
             </div>
-          </div>
+            <div class="emotion-intensity">
+              <span class="intensity-dots">
+                <span
+                  v-for="dot in 3"
+                  :key="dot"
+                  class="dot"
+                  :class="{ active: getIntensityClass(dot) }"
+                ></span
+              ></span>
+              <span class="intensity-level">{{
+                getRiskLevel(currentEmotion.riskLevel)
+              }}</span>
+            </div>
+            <div class="warm-suggestion" v-if="currentEmotion.suggestion">
+              <div class="suggestion-icon">💡</div>
+              <div class="suggestion-content">
+                <div class="suggestion-title">温暖建议</div>
+                <div class="suggestion-text">
+                  {{ currentEmotion.suggestion }}
+                </div>
+              </div>
+            </div>
 
-          <!-- 治愈小行动 -->
-          <div class="healing-actions">
-            <div class="actions-title">治愈小行动</div>
-            <div class="actions-list">
-              <div
-                class="action-item"
-                v-for="action in currentEmotion.improvementSuggestions"
-                :key="action"
-              >
-                <div class="action-icon">✨</div>
-                <div class="action-text">{{ action }}</div>
+            <!-- 治愈小行动 -->
+            <div class="healing-actions">
+              <div class="actions-title">治愈小行动</div>
+              <div class="actions-list">
+                <div
+                  class="action-item"
+                  v-for="action in currentEmotion.improvementSuggestions"
+                  :key="action"
+                >
+                  <div class="action-icon">✨</div>
+                  <div class="action-text">{{ action }}</div>
+                </div>
               </div>
             </div>
-          </div>
-          <!-- 风险提示 -->
-          <div
-            class="risk-notice"
-            v-if="currentEmotion.riskLevel > 1 && currentEmotion.isNegative"
-          >
-            <div class="notice-icon">🤗</div>
-            <div class="notice-content">
-              <div class="notice-title">温馨提示</div>
-              <div class="notice-text">
-                {{ currentEmotion.riskDescription }}
+            <!-- 风险提示 -->
+            <div
+              class="risk-notice"
+              v-if="currentEmotion.riskLevel > 1 && currentEmotion.isNegative"
+            >
+              <div class="notice-icon">🤗</div>
+              <div class="notice-content">
+                <div class="notice-title">温馨提示</div>
+                <div class="notice-text">
+                  {{ currentEmotion.riskDescription }}
+                </div>
               </div>
             </div>
-          </div>
           </div>
         </div>
       </div>
