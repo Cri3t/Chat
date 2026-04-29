@@ -178,6 +178,36 @@ const handleAIResponse = (sessionId: string, userMessage: string) => {
 
   messages.value.push(streamingAiMessage);
 
+  let contentBuffer = "";
+  let flushTimer: ReturnType<typeof window.setTimeout> | null = null;
+
+  const clearFlushTimer = () => {
+    if (flushTimer === null) return;
+
+    window.clearTimeout(flushTimer);
+    flushTimer = null;
+  };
+
+  const flushContentBuffer = () => {
+    if (!contentBuffer) {
+      clearFlushTimer();
+      return;
+    }
+
+    streamingAiMessage.content += contentBuffer;
+    contentBuffer = "";
+    clearFlushTimer();
+  };
+
+  const scheduleFlushContentBuffer = () => {
+    if (flushTimer !== null) return;
+
+    flushTimer = window.setTimeout(() => {
+      flushTimer = null;
+      flushContentBuffer();
+    }, 30);
+  };
+
   // 通过fetchEventSource进行流式传输
 
   const crtl = new AbortController(); //创建一个AbortController实例，用于后续取消请求
@@ -206,9 +236,9 @@ const handleAIResponse = (sessionId: string, userMessage: string) => {
       const raw = streamEvent.data.trim();
       if (!raw) return;
       const eventName = streamEvent.event;
-      const lastAiMessage = messages.value[messages.value.length - 1];
 
       if (eventName === "done") {
+        flushContentBuffer();
         isSending.value = false;
         crtl.abort(); // 取消请求
         getSessionList();
@@ -219,18 +249,22 @@ const handleAIResponse = (sessionId: string, userMessage: string) => {
       const payload = JSON.parse(raw);
       const code = payload.code;
       if (code === "200" && payload.data && payload.data.content) {
-        lastAiMessage.content += payload.data.content;
+        contentBuffer += payload.data.content;
+        scheduleFlushContentBuffer();
       } else if (code !== "200") {
+        flushContentBuffer();
         handleErrorAIResponse(payload.message || "AI回复错误");
       }
     },
 
     onerror: (error) => {
+      flushContentBuffer();
       handleErrorAIResponse(error || "AI回复错误，请稍后再试");
       throw error;
     },
 
     onclose: () => {
+      flushContentBuffer();
       getSessionEmotion(currentSession.value?.sessionId || "");
     },
   });
