@@ -6,6 +6,11 @@ import type {
 } from "@/types/consultation.types";
 import type { RegisterPayload, LoginPayload } from "@/types/login.types";
 import type { Diary } from "@/types/diary.types";
+import type {
+  Article,
+  ArticleListParams,
+  PageResult,
+} from "@/types/article.types";
 
 // 用户登录
 export const login = (data: LoginPayload) => {
@@ -62,4 +67,11 @@ export const getSessionEmotion = (params: { sessionId: string }) => {
 //emotion diary
 export const submitDiary = (data: Diary) => {
   return service.post("/emotion-diary", data);
+};
+
+//获取文章列表
+export const getArticleList = (params: ArticleListParams) => {
+  return service.get<any, PageResult<Article>>("/knowledge/article/page", {
+    params,
+  });
 };
